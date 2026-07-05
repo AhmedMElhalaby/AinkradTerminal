@@ -1,0 +1,63 @@
+name: AinkradTerminal
+options:
+  bundleIdPrefix: com.ainkrad
+  deploymentTarget: { macOS: "14.0" }
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGNING_REQUIRED: NO
+    CODE_SIGNING_ALLOWED: NO
+    EAGER_LINKING: NO
+packages:
+  SwiftTerm:
+    url: https://github.com/AhmedMElhalaby/SwiftTerm
+    revision: e44352494333686a5de418f85f7927b81c6a9fbe
+  AinkradAppKit:
+    url: https://github.com/AhmedMElhalaby/AinkradAppKit
+    revision: 982fb593c6388cd51a178952375e02dd9c161877
+targets:
+  # Static library: its objects (and the statically-linked SwiftTerm) fold into
+  # whatever links it. AinkradAppKit is dynamic and NEVER embedded — resolved
+  # from the host's copy at runtime via @rpath so protocol metadata is shared.
+  TerminalFeature:
+    type: library.static
+    platform: macOS
+    sources: [Sources/TerminalFeature]
+    dependencies:
+      - package: SwiftTerm
+      - package: AinkradAppKit
+        embed: false
+  TerminalPlugin:
+    type: bundle
+    platform: macOS
+    sources: [Sources/TerminalPlugin]
+    dependencies:
+      - target: TerminalFeature
+      # SwiftTerm linked here too so its objects land in the bundle's mach-o
+      # (static libraries don't propagate object code by themselves).
+      - package: SwiftTerm
+      - package: AinkradAppKit
+        embed: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.plugin.terminal
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Sources/TerminalPlugin/Info.plist
+        MACH_O_TYPE: mh_bundle
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
+        OTHER_LDFLAGS: ["-lTerminalFeature"]
+  TerminalFeatureTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/TerminalFeatureTests]
+    dependencies:
+      - target: TerminalFeature
+      - package: SwiftTerm
+      - package: AinkradAppKit
+schemes:
+  TerminalPlugin:
+    build: { targets: { TerminalPlugin: all, TerminalFeatureTests: [test] } }
+    test:  { config: Debug, targets: [TerminalFeatureTests] }
