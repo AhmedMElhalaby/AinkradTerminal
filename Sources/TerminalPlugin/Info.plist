@@ -4,6 +4,10 @@
 <dict>
     <key>CFBundleIdentifier</key><string>com.ainkrad.plugin.terminal</string>
     <key>CFBundleName</key><string>TerminalPlugin</string>
+    <!-- Required: the host installer renames the bundle to <appID>.bundle
+         (terminal.bundle), so CFBundle's filename-based executable fallback
+         ("terminal") would miss the real executable. Declare it explicitly. -->
+    <key>CFBundleExecutable</key><string>TerminalPlugin</string>
     <key>CFBundlePackageType</key><string>BNDL</string>
     <key>NSPrincipalClass</key><string>TerminalEntryPoint</string>
     <key>AinkradAppID</key><string>terminal</string>
