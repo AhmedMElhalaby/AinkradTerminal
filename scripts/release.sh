@@ -3,6 +3,8 @@ set -euo pipefail
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode-beta.app/Contents/Developer}"
 VERSION="${1:?usage: release.sh vX.Y.Z}"
 DESC="A terminal for Ainkrad — blocks, themes, SwiftTerm-backed."
+AUTHOR="Ahmed M. Elhalaby"
+LONG_DESC="AinkradTerminal brings a full terminal into Ainkrad's workspace: block-based command history, theme-matched colors driven by the host's DesignTokens, and a SwiftTerm-backed emulator underneath. Split panes, resize freely, and switch themes without losing your scroll history."
 
 xcodegen generate
 xcodebuild -scheme TerminalPlugin -configuration Release -derivedDataPath build -destination 'platform=macOS' build
@@ -15,7 +17,8 @@ rm -rf dist && mkdir -p dist
 SHA="$(shasum -a 256 dist/terminal.bundle.zip | awk '{print $1}')"
 
 cat > dist/ainkrad-plugin.json <<JSON
-{ "id": "terminal", "name": "Terminal", "icon": "terminal", "description": "$DESC", "apiVersion": 1, "sha256": "$SHA" }
+{ "id": "terminal", "name": "Terminal", "icon": "terminal", "description": "$DESC", "apiVersion": 1, "sha256": "$SHA",
+  "author": "$AUTHOR", "longDescription": "$LONG_DESC", "screenshots": [], "links": [] }
 JSON
 
 gh release create "$VERSION" dist/ainkrad-plugin.json dist/terminal.bundle.zip \
