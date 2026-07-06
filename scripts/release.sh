@@ -18,7 +18,7 @@ SHA="$(shasum -a 256 dist/terminal.bundle.zip | awk '{print $1}')"
 
 cat > dist/ainkrad-plugin.json <<JSON
 { "id": "terminal", "name": "Terminal", "icon": "terminal", "description": "$DESC", "apiVersion": 1, "sha256": "$SHA",
-  "author": "$AUTHOR", "longDescription": "$LONG_DESC", "screenshots": [], "links": [] }
+  "author": "$AUTHOR", "longDescription": "$LONG_DESC", "screenshots": ["https://raw.githubusercontent.com/AhmedMElhalaby/AinkradTerminal/master/screenshots/terminal-1.png"], "links": [] }
 JSON
 
 gh release create "$VERSION" dist/ainkrad-plugin.json dist/terminal.bundle.zip \
