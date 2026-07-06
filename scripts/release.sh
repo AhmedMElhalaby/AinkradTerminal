@@ -16,9 +16,15 @@ rm -rf dist && mkdir -p dist
 /usr/bin/ditto -c -k --keepParent "$BUNDLE" dist/terminal.bundle.zip
 SHA="$(shasum -a 256 dist/terminal.bundle.zip | awk '{print $1}')"
 
+# All three promo shots (launch / split panes / themes) — served from master,
+# so merge the screenshots before cutting a release that references them.
+SHOTS_BASE="https://raw.githubusercontent.com/AhmedMElhalaby/AinkradTerminal/master/screenshots"
+
 cat > dist/ainkrad-plugin.json <<JSON
 { "id": "terminal", "name": "Terminal", "icon": "terminal", "description": "$DESC", "apiVersion": 1, "sha256": "$SHA",
-  "author": "$AUTHOR", "longDescription": "$LONG_DESC", "screenshots": ["https://raw.githubusercontent.com/AhmedMElhalaby/AinkradTerminal/master/screenshots/terminal-1.png"], "links": [] }
+  "author": "$AUTHOR", "longDescription": "$LONG_DESC",
+  "screenshots": ["$SHOTS_BASE/terminal-1.png", "$SHOTS_BASE/terminal-2.png", "$SHOTS_BASE/terminal-3.png"],
+  "links": [] }
 JSON
 
 gh release create "$VERSION" dist/ainkrad-plugin.json dist/terminal.bundle.zip \
