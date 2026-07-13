@@ -57,6 +57,7 @@ final class AinkradTerminalView: LocalProcessTerminalView {
 struct TerminalContainerView: NSViewRepresentable {
     let session: TerminalSession
     let appearance: TerminalRenderAppearance
+    let contextBridge: TerminalContextBridge
     /// True for the single pane that fills the Focus-Mode canvas — its resize
     /// applies immediately (no debounce) so the zoom-in fills without a flash.
     @Environment(\.paneResizesImmediately) private var resizesImmediately
@@ -81,6 +82,7 @@ struct TerminalContainerView: NSViewRepresentable {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak view] in
             view?.startIfNeeded()
         }
+        contextBridge.setActiveSource(view)
         return view
     }
 
@@ -168,6 +170,7 @@ struct TerminalContainerView: NSViewRepresentable {
     }
 
     static func dismantleNSView(_ nsView: AinkradTerminalView, coordinator: Coordinator) {
+        coordinator.contextBridge.clearActiveSource(nsView)
         coordinator.teardown()
         let pid = nsView.process.shellPid
         nsView.terminate()
@@ -175,11 +178,12 @@ struct TerminalContainerView: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(session: session)
+        Coordinator(session: session, contextBridge: contextBridge)
     }
 
     final class Coordinator: NSObject, LocalProcessTerminalViewDelegate {
         private let session: TerminalSession
+        let contextBridge: TerminalContextBridge
         var appliedAppearance: TerminalRenderAppearance?
         var appliedScrollback: Int?
 
@@ -188,8 +192,9 @@ struct TerminalContainerView: NSViewRepresentable {
         private var scrollMonitor: Any?
         private var hideWork: DispatchWorkItem?
 
-        init(session: TerminalSession) {
+        init(session: TerminalSession, contextBridge: TerminalContextBridge) {
             self.session = session
+            self.contextBridge = contextBridge
         }
 
         /// Hides SwiftTerm's always-on scrollbar and reveals it only while the

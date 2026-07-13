@@ -12,6 +12,7 @@ public struct TerminalApp: AinkradApp {
     public static func makeRootView(host: HostServices) -> AnyView {
         AnyView(TerminalBlockRootView(
             settingsStore: TerminalRuntime.settingsStore(for: host),
+            contextBridge: TerminalRuntime.contextBridge(for: host),
             theme: host.theme
         ))
     }
