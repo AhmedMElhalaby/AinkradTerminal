@@ -1,0 +1,68 @@
+import Foundation
+import AinkradAppKit
+
+/// The minimal read-only surface `TerminalContextBridge` needs from a live
+/// terminal. Kept as a protocol (not the concrete AppKit view) so the bridge is
+/// unit-testable without a window server. Class-constrained so the bridge can
+/// hold it weakly and compare identity.
+@MainActor
+protocol TerminalBufferSource: AnyObject {
+    /// The current buffer contents as plain text (may be empty / whitespace).
+    func agentBufferText() -> String
+    /// The shell's reported working directory, if known (OSC 7), else nil.
+    func agentCurrentDirectory() -> String?
+}
+
+/// Per-host bridge that publishes the active terminal's buffer as read-only
+/// agent context. Registered once per host by `TerminalRuntime`; holds a weak
+/// reference to the currently-live terminal view and reads it on demand. Returns
+/// nil when no view is active or the buffer is empty — so a torn-down view (weak
+/// ref gone) simply produces no context, with no teardown call needed.
+@MainActor
+final class TerminalContextBridge {
+    private weak var activeSource: (any TerminalBufferSource)?
+
+    /// The just-attached terminal view becomes the source of context.
+    func setActiveSource(_ source: any TerminalBufferSource) {
+        activeSource = source
+    }
+
+    /// Clears the source only if `source` is still the active one — so a
+    /// late-dismantled view can't wipe a newer view's registration.
+    func clearActiveSource(_ source: any TerminalBufferSource) {
+        if activeSource === source { activeSource = nil }
+    }
+
+    /// The current read-only snapshot, or nil when there is nothing to show.
+    func snapshot() -> AgentContextSnapshot? {
+        guard let source = activeSource else { return nil }
+        let text = boundedTail(source.agentBufferText())
+        guard !text.isEmpty else { return nil }
+        let title: String
+        if let cwd = source.agentCurrentDirectory(), !cwd.isEmpty {
+            title = "Terminal — \(cwd)"
+        } else {
+            title = "Terminal"
+        }
+        return AgentContextSnapshot(kind: "terminal", title: title, text: text)
+    }
+
+    /// Trims to the most-recent `maxChars` so recent output always survives
+    /// (the host also truncates per-source; publishing a pre-trimmed tail keeps
+    /// the newest output regardless of the host's truncation direction).
+    private func boundedTail(_ raw: String, maxChars: Int = 8000) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > maxChars else { return trimmed }
+        return "…[earlier output truncated]\n" + String(trimmed.suffix(maxChars))
+    }
+}
+
+extension AinkradTerminalView: TerminalBufferSource {
+    func agentBufferText() -> String {
+        let data = getTerminal().getBufferAsData()
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+    func agentCurrentDirectory() -> String? {
+        getTerminal().hostCurrentDirectory
+    }
+}
