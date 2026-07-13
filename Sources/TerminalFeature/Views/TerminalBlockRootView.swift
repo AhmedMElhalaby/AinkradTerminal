@@ -7,6 +7,7 @@ import AinkradAppKit
 /// re-evaluates and restyles the running terminal live.
 struct TerminalBlockRootView: View {
     let settingsStore: TerminalSettingsStore
+    let contextBridge: TerminalContextBridge
     let theme: HostTheme
     @State private var session: TerminalSession?
     @State private var isNoticeDismissed = false
@@ -23,7 +24,7 @@ struct TerminalBlockRootView: View {
                     if !session.startupNotices.isEmpty && !isNoticeDismissed {
                         noticeBanner(session.startupNotices)
                     }
-                    TerminalContainerView(session: session, appearance: appearance)
+                    TerminalContainerView(session: session, appearance: appearance, contextBridge: contextBridge)
                 }
             } else {
                 Color.clear

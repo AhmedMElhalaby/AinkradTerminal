@@ -36,3 +36,71 @@ final class InMemoryPersistenceStore {
         storage[T.documentID] = nil
     }
 }
+
+/// A test double for the live-terminal surface `TerminalContextBridge` reads.
+/// Lets the bridge be tested without constructing an AppKit terminal view.
+@MainActor
+final class FakeBufferSource: TerminalBufferSource {
+    var buffer: String
+    var cwd: String?
+    init(buffer: String = "", cwd: String? = nil) {
+        self.buffer = buffer
+        self.cwd = cwd
+    }
+    func agentBufferText() -> String { buffer }
+    func agentCurrentDirectory() -> String? { cwd }
+}
+
+/// Records every context source registered against it, so tests can assert the
+/// registration count and invoke the registered closure.
+@MainActor
+final class RecordingContextRegistry: PluginContextRegistry {
+    private(set) var sources: [PluginContextToken: @MainActor () -> AgentContextSnapshot?] = [:]
+    func register(_ source: @escaping @MainActor () -> AgentContextSnapshot?) -> PluginContextToken {
+        let token = PluginContextToken()
+        sources[token] = source
+        return token
+    }
+    func remove(_ token: PluginContextToken) { sources[token] = nil }
+    /// Convenience: the snapshots all currently-registered sources produce.
+    func snapshots() -> [AgentContextSnapshot] { sources.values.compactMap { $0() } }
+}
+
+private final class FakeDocs: PluginDocumentStore {
+    func data(forKey key: String) -> Data? { nil }
+    func setData(_ data: Data?, forKey key: String) {}
+}
+private final class FakeSecrets: PluginSecretStore {
+    func secret(forKey key: String) -> String? { nil }
+    func setSecret(_ value: String?, forKey key: String) {}
+}
+private final class FakeLogger: PluginLogger {
+    func info(_ message: String) {}
+    func error(_ message: String) {}
+}
+
+/// A minimal reference-type `HostServices` for registration tests. Only
+/// `context` carries behavior; the rest are inert doubles. Reference type so
+/// `ObjectIdentifier(host as AnyObject)` gives it stable identity (matching how
+/// `TerminalRuntime` keys per host).
+@MainActor
+final class FakeHostServices: HostServices {
+    let documents: PluginDocumentStore = FakeDocs()
+    let secrets: PluginSecretStore = FakeSecrets()
+    let theme: HostTheme = HostTheme(tokens(themeID: "test"))
+    let log: PluginLogger = FakeLogger()
+    let context: PluginContextRegistry
+
+    /// Keeps every fake host alive for the whole test process. `TerminalRuntime`
+    /// keys its per-host `bridges` map by `ObjectIdentifier(host)` (address-based)
+    /// and never removes entries — mirroring the production `stores` pattern. If a
+    /// short-lived fake host deallocated, its address could be reused by a later
+    /// test, colliding with the stale bridge entry and defeating register-once.
+    /// Retaining every instance guarantees each test's host has a unique identity.
+    private static var liveInstances: [FakeHostServices] = []
+
+    init(context: PluginContextRegistry) {
+        self.context = context
+        Self.liveInstances.append(self)
+    }
+}
