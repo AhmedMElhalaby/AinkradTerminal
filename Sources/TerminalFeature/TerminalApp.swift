@@ -10,7 +10,8 @@ public struct TerminalApp: AinkradApp {
     public static let icon = "terminal"
 
     public static func makeRootView(host: HostServices) -> AnyView {
-        AnyView(TerminalBlockRootView(
+        TerminalRuntime.registerActions(for: host)
+        return AnyView(TerminalBlockRootView(
             settingsStore: TerminalRuntime.settingsStore(for: host),
             contextBridge: TerminalRuntime.contextBridge(for: host),
             theme: host.theme
