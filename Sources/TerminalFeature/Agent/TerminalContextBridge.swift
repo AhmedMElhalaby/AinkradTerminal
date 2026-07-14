@@ -11,6 +11,9 @@ protocol TerminalBufferSource: AnyObject {
     func agentBufferText() -> String
     /// The shell's reported working directory, if known (OSC 7), else nil.
     func agentCurrentDirectory() -> String?
+    /// Render an agent-run command and its captured output into the visible
+    /// terminal (best-effort; no-op when unimplemented in a headless test).
+    func agentEcho(command: String, output: String)
 }
 
 /// Per-host bridge that publishes the active terminal's buffer as read-only
@@ -47,6 +50,11 @@ final class TerminalContextBridge {
         return AgentContextSnapshot(kind: "terminal", title: title, text: text)
     }
 
+    /// Echo an agent-run command + output into the active terminal, if any.
+    func echo(command: String, output: String) {
+        activeSource?.agentEcho(command: command, output: output)
+    }
+
     /// Trims to the most-recent `maxChars` so recent output always survives
     /// (the host also truncates per-source; publishing a pre-trimmed tail keeps
     /// the newest output regardless of the host's truncation direction).
@@ -64,5 +72,17 @@ extension AinkradTerminalView: TerminalBufferSource {
     }
     func agentCurrentDirectory() -> String? {
         getTerminal().hostCurrentDirectory
+    }
+    func agentEcho(command: String, output: String) {
+        // Display-only: the host already executed `command` and captured
+        // `output`. We must NOT re-run it — `send(txt:)` writes keystrokes to
+        // the live PTY, which would re-execute the command (dangerous for
+        // non-idempotent/destructive commands the user approved exactly
+        // once). Feed the command line + output straight to the terminal's
+        // display buffer instead.
+        feed(text: "$ \(command)\r\n")
+        if !output.isEmpty {
+            feed(text: output.hasSuffix("\n") ? output : output + "\n")
+        }
     }
 }
