@@ -15,13 +15,27 @@ final class TerminalSession {
     /// surfaced inline by the Terminal Block, never as a modal. See
     /// Terminal App Architecture.md.
     let startupNotices: [String]
+    /// Overrides the spawned executable/args (e.g. `/usr/bin/ssh …`) when this
+    /// session was created from an SSH launch payload. `nil` for the normal
+    /// login-shell case.
+    let launchExecutable: String?
+    let launchArgs: [String]?
     private(set) var isRunning = true
 
-    init(id: UUID = UUID(), workingDirectory: URL, shellPath: String, startupNotices: [String] = []) {
+    init(
+        id: UUID = UUID(),
+        workingDirectory: URL,
+        shellPath: String,
+        startupNotices: [String] = [],
+        launchExecutable: String? = nil,
+        launchArgs: [String]? = nil
+    ) {
         self.id = id
         self.workingDirectory = workingDirectory
         self.shellPath = shellPath
         self.startupNotices = startupNotices
+        self.launchExecutable = launchExecutable
+        self.launchArgs = launchArgs
     }
 
     func terminate() {
