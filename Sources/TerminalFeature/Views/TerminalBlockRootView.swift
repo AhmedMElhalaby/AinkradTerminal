@@ -9,6 +9,7 @@ struct TerminalBlockRootView: View {
     let settingsStore: TerminalSettingsStore
     let contextBridge: TerminalContextBridge
     let theme: HostTheme
+    let takeLaunch: () -> SSHLaunch?
     @State private var session: TerminalSession?
     @State private var isNoticeDismissed = false
 
@@ -32,7 +33,8 @@ struct TerminalBlockRootView: View {
         }
         .onAppear {
             guard session == nil else { return }
-            session = TerminalSessionFactory(settings: settingsStore.settings).makeSession()
+            let launch = takeLaunch()
+            session = TerminalSessionFactory(settings: settingsStore.settings).makeSession(launch: launch)
         }
     }
 

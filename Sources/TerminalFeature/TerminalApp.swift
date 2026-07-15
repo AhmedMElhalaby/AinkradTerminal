@@ -14,7 +14,8 @@ public struct TerminalApp: AinkradApp {
         return AnyView(TerminalBlockRootView(
             settingsStore: TerminalRuntime.settingsStore(for: host),
             contextBridge: TerminalRuntime.contextBridge(for: host),
-            theme: host.theme
+            theme: host.theme,
+            takeLaunch: { SSHLaunch(json: host.apps.takePendingLaunch()) }
         ))
     }
 

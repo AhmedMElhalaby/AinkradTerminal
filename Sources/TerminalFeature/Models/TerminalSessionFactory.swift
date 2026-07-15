@@ -21,7 +21,7 @@ struct TerminalSessionFactory {
         self.settings = settings
     }
 
-    func makeSession() -> TerminalSession {
+    func makeSession(launch: SSHLaunch? = nil) -> TerminalSession {
         let settings = self.settings
         var notices: [String] = []
 
@@ -47,7 +47,9 @@ struct TerminalSessionFactory {
         return TerminalSession(
             workingDirectory: resolution.url,
             shellPath: shellPath,
-            startupNotices: notices
+            startupNotices: notices,
+            launchExecutable: launch.map { _ in SSHInvocation.executable },
+            launchArgs: launch.map { SSHInvocation.argv($0) }
         )
     }
 }

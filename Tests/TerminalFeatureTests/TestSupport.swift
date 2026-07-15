@@ -101,6 +101,10 @@ private final class FakeLogger: PluginLogger {
     func info(_ message: String) {}
     func error(_ message: String) {}
 }
+private final class FakeAppLauncher: PluginAppLauncher {
+    func open(appID: String, payload: String?) {}
+    func takePendingLaunch() -> String? { nil }
+}
 
 /// A minimal reference-type `HostServices` for registration tests. Only
 /// `context` carries behavior; the rest are inert doubles. Reference type so
@@ -112,6 +116,7 @@ final class FakeHostServices: HostServices {
     let secrets: PluginSecretStore = FakeSecrets()
     let theme: HostTheme = HostTheme(tokens(themeID: "test"))
     let log: PluginLogger = FakeLogger()
+    let apps: PluginAppLauncher = FakeAppLauncher()
     let context: PluginContextRegistry
     let actions: AgentActionProvider
 

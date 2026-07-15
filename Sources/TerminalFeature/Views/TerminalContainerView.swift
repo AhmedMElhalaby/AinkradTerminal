@@ -71,9 +71,11 @@ struct TerminalContainerView: NSViewRepresentable {
         // Defer the spawn to the first real layout so the shell starts at the
         // pane's size (no startup-time SIGWINCH → no stray `%`). See `onReady`.
         view.onReady = { [weak view, session] in
+            let executable = session.launchExecutable ?? session.shellPath
+            let args = session.launchArgs ?? ["-l"]
             view?.startProcess(
-                executable: session.shellPath,
-                args: ["-l"],
+                executable: executable,
+                args: args,
                 environment: nil,
                 currentDirectory: session.workingDirectory.path
             )

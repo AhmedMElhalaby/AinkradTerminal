@@ -16,8 +16,7 @@ packages:
     url: https://github.com/AhmedMElhalaby/SwiftTerm
     revision: e44352494333686a5de418f85f7927b81c6a9fbe
   AinkradAppKit:
-    url: https://github.com/AhmedMElhalaby/AinkradAppKit
-    revision: 45ed078cf445b38d6a187ab46455f985d8265694
+    path: ../AinkradAppKit
 targets:
   # Static library: its objects (and the statically-linked SwiftTerm) fold into
   # whatever links it. AinkradAppKit is dynamic and NEVER embedded — resolved
