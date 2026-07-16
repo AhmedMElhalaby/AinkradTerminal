@@ -35,6 +35,7 @@ struct TerminalSettingsView: View {
             }
             .padding(18)
         }
+        .environment(\.ainkradTheme, tokens)
         .scrollContentBackground(.hidden)
         .onAppear(perform: loadIfNeeded)
         .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder]) { result in
@@ -119,55 +120,29 @@ struct TerminalSettingsView: View {
                 Text("Cursor")
                     .font(AinkradFont.display(12, weight: .medium))
                     .foregroundStyle(tokens.foreground.opacity(0.85))
-                HStack(spacing: 4) {
-                    ForEach(TerminalCursorShape.allCases, id: \.self) { shape in
-                        cursorShapeButton(shape, tokens: tokens)
-                    }
-                }
+                AinkradSegmentedPicker(
+                    items: TerminalCursorShape.allCases,
+                    selection: Binding(
+                        get: { settings.cursorShape },
+                        set: { shape in settingsStore.update { $0.cursorShape = shape } }
+                    ),
+                    label: { $0.rawValue.capitalized }
+                )
             }
 
             HStack(spacing: 8) {
                 Text("Blink")
                     .font(AinkradFont.display(12))
                     .foregroundStyle(tokens.foreground.opacity(0.7))
-                NeonToggle(
+                AinkradToggle(
                     isOn: Binding(
                         get: { settings.cursorBlink },
                         set: { v in settingsStore.update { $0.cursorBlink = v } }
-                    ),
-                    tokens: tokens
+                    )
                 )
             }
             .padding(.bottom, 5)
         }
-    }
-
-    private func cursorShapeButton(_ shape: TerminalCursorShape, tokens: HostThemeTokens) -> some View {
-        let isSelected = settings.cursorShape == shape
-        let icon: String = switch shape {
-        case .block: "rectangle.fill"
-        case .underline: "underline"
-        case .bar: "cursorarrow.click"
-        }
-        return Button {
-            settingsStore.update { $0.cursorShape = shape }
-        } label: {
-            Image(systemName: icon)
-                .font(.system(size: 11))
-                .foregroundStyle(isSelected ? tokens.foreground : tokens.foreground.opacity(0.5))
-                .frame(width: 40, height: 30)
-                .background(
-                    RoundedRectangle(cornerRadius: 7)
-                        .fill(isSelected ? tokens.accentPrimary.opacity(0.18) : tokens.surfaceElevated.opacity(0.5))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 7)
-                        .strokeBorder(isSelected ? tokens.accentPrimary.opacity(0.5) : .clear, lineWidth: 1)
-                )
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(shape.rawValue.capitalized)
     }
 
     private func colorControl(
@@ -214,7 +189,7 @@ struct TerminalSettingsView: View {
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 // Miniature terminal preview.
-                RoundedRectangle(cornerRadius: 6)
+                ChamferShape(cut: AinkradRadius.sm)
                     .fill(Color(hex: preview.background))
                     .frame(height: 40)
                     .overlay(
@@ -229,7 +204,7 @@ struct TerminalSettingsView: View {
                         alignment: .leading
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
+                        ChamferShape(cut: AinkradRadius.sm)
                             .strokeBorder(.white.opacity(0.08), lineWidth: 1)
                     )
 
@@ -239,11 +214,11 @@ struct TerminalSettingsView: View {
             }
             .padding(8)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                ChamferShape(cut: AinkradRadius.md)
                     .fill(isSelected ? tokens.accentPrimary.opacity(0.13) : tokens.surfaceElevated.opacity(0.5))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                ChamferShape(cut: AinkradRadius.md)
                     .strokeBorder(tokens.accentPrimary.opacity(isSelected ? 0.4 : 0.15), lineWidth: 1)
             )
             .overlay(
@@ -282,11 +257,11 @@ struct TerminalSettingsView: View {
                 .padding(.horizontal, 10)
                 .frame(width: 200, height: 32)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    ChamferShape(cut: AinkradRadius.sm)
                         .fill(tokens.surfaceElevated.opacity(0.5))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    ChamferShape(cut: AinkradRadius.sm)
                         .strokeBorder(tokens.accentPrimary.opacity(0.2), lineWidth: 1)
                 )
             }
@@ -318,11 +293,11 @@ struct TerminalSettingsView: View {
             }
             .frame(height: 32)
             .background(
-                RoundedRectangle(cornerRadius: 8)
+                ChamferShape(cut: AinkradRadius.sm)
                     .fill(tokens.surfaceElevated.opacity(0.5))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
+                ChamferShape(cut: AinkradRadius.sm)
                     .strokeBorder(tokens.accentPrimary.opacity(0.2), lineWidth: 1)
             )
         }
@@ -346,22 +321,8 @@ struct TerminalSettingsView: View {
             SettingsSectionHeader(title: "BEHAVIOR", tokens: tokens)
 
             field(label: "Default Shell", tokens: tokens) {
-                TextField("/bin/zsh", text: $shellPathText)
-                    .textFieldStyle(.plain)
-                    .font(AinkradFont.mono(12))
-                    .foregroundStyle(tokens.foreground)
-                    .tint(tokens.accentSecondary)
+                AinkradTextField(text: $shellPathText, placeholder: "/bin/zsh")
                     .onSubmit(updateShell)
-                    .padding(.horizontal, 10)
-                    .frame(height: 32)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(tokens.surfaceElevated.opacity(0.5))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(tokens.accentPrimary.opacity(0.2), lineWidth: 1)
-                    )
 
                 if let shellValidationMessage {
                     Text(shellValidationMessage)
@@ -402,11 +363,11 @@ struct TerminalSettingsView: View {
                 .padding(.horizontal, 10)
                 .frame(height: 32)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    ChamferShape(cut: AinkradRadius.sm)
                         .fill(tokens.surfaceElevated.opacity(0.5))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    ChamferShape(cut: AinkradRadius.sm)
                         .strokeBorder(tokens.accentPrimary.opacity(0.2), lineWidth: 1)
                 )
             }
@@ -417,8 +378,7 @@ struct TerminalSettingsView: View {
                 isOn: Binding(
                     get: { settings.optionAsMeta },
                     set: { v in settingsStore.update { $0.optionAsMeta = v } }
-                ),
-                tokens: tokens
+                )
             )
 
             toggleRow(
@@ -427,11 +387,10 @@ struct TerminalSettingsView: View {
                 isOn: Binding(
                     get: { settings.sendMouseEventsToApps },
                     set: { v in settingsStore.update { $0.sendMouseEventsToApps = v } }
-                ),
-                tokens: tokens
+                )
             )
 
-            field(label: "Scrollback Lines", tokens: tokens) {
+            AinkradFormRow(title: "Scrollback Lines") {
                 HStack(spacing: 0) {
                     stepperButton("minus", tokens: tokens) {
                         settingsStore.update { $0.scrollbackLines = max(0, $0.scrollbackLines - 500) }
@@ -446,30 +405,20 @@ struct TerminalSettingsView: View {
                 }
                 .frame(width: 124, height: 32)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    ChamferShape(cut: AinkradRadius.sm)
                         .fill(tokens.surfaceElevated.opacity(0.5))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    ChamferShape(cut: AinkradRadius.sm)
                         .strokeBorder(tokens.accentPrimary.opacity(0.2), lineWidth: 1)
                 )
             }
         }
     }
 
-    private func toggleRow(label: String, help: String, isOn: Binding<Bool>, tokens: HostThemeTokens) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.85))
-                Text(help)
-                    .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.45))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer()
-            NeonToggle(isOn: isOn, tokens: tokens)
+    private func toggleRow(label: String, help: String, isOn: Binding<Bool>) -> some View {
+        AinkradFormRow(title: label, help: help) {
+            AinkradToggle(isOn: isOn)
         }
     }
 
