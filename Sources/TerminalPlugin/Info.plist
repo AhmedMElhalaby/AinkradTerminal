@@ -13,6 +13,6 @@
     <key>AinkradAppID</key><string>terminal</string>
     <key>AinkradDisplayName</key><string>Terminal</string>
     <key>AinkradIconSymbol</key><string>terminal</string>
-    <key>AinkradAPIVersion</key><integer>4</integer>
+    <key>AinkradAPIVersion</key><integer>6</integer>
 </dict>
 </plist>
