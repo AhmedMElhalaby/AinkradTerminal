@@ -238,36 +238,16 @@ struct TerminalSettingsView: View {
                 .font(AinkradFont.display(12, weight: .medium))
                 .foregroundStyle(tokens.foreground.opacity(0.85))
 
-            Menu {
-                ForEach(availableFonts, id: \.self) { family in
-                    Button(family) {
-                        settingsStore.update { $0.fontFamily = family }
-                    }
-                }
-            } label: {
-                HStack {
-                    Text(settings.fontFamily ?? TerminalAppearanceResolver.defaultFontFamily)
-                        .font(AinkradFont.display(12))
-                        .foregroundStyle(tokens.foreground)
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 9))
-                        .foregroundStyle(tokens.foreground.opacity(0.5))
-                }
-                .padding(.horizontal, 10)
-                .frame(width: 200, height: 32)
-                .background(
-                    ChamferShape(cut: AinkradRadius.sm)
-                        .fill(tokens.surfaceElevated.opacity(0.5))
-                )
-                .overlay(
-                    ChamferShape(cut: AinkradRadius.sm)
-                        .strokeBorder(tokens.accentPrimary.opacity(0.2), lineWidth: 1)
-                )
-            }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .fixedSize()
+            // Custom HUD dropdown (no native macOS Menu).
+            AinkradSelect(
+                items: availableFonts,
+                selection: Binding(
+                    get: { settings.fontFamily ?? TerminalAppearanceResolver.defaultFontFamily },
+                    set: { newValue in settingsStore.update { $0.fontFamily = newValue } }
+                ),
+                label: { $0 }
+            )
+            .frame(width: 200)
         }
     }
 
