@@ -99,14 +99,13 @@ struct TerminalSettingsView: View {
                     .font(AinkradFont.mono(11))
                     .foregroundStyle(tokens.accentSecondary.opacity(0.8))
             }
-            Slider(
+            AinkradSlider(
                 value: Binding(
                     get: { settings.backgroundOpacity },
                     set: { v in settingsStore.update { $0.backgroundOpacity = v } }
                 ),
                 in: 0.2...1.0
             )
-            .tint(tokens.accentPrimary)
             Text("Lets the ambient backdrop show through the terminal.")
                 .font(AinkradFont.display(11))
                 .foregroundStyle(tokens.foreground.opacity(0.45))
@@ -157,15 +156,12 @@ struct TerminalSettingsView: View {
                 .font(AinkradFont.display(12, weight: .medium))
                 .foregroundStyle(tokens.foreground.opacity(0.85))
             HStack(spacing: 8) {
-                ColorPicker(
-                    "",
+                AinkradColorPicker(
                     selection: Binding(
                         get: { Color(hex: override ?? resolvedHex) },
                         set: { set($0.hexString) }
-                    ),
-                    supportsOpacity: false
+                    )
                 )
-                .labelsHidden()
 
                 if override != nil {
                     Button("Reset") { set(nil) }
