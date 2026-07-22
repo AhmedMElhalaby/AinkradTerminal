@@ -17,7 +17,7 @@ packages:
     revision: e44352494333686a5de418f85f7927b81c6a9fbe
   AinkradAppKit:
     url: https://github.com/AhmedMElhalaby/AinkradAppKit
-    revision: 45aee502a0719c5535e31a225f20970ae5b3c1d2
+    revision: bbad66a43c414d0e9c22e193ba3d326fb5d23532
 targets:
   # Static library: its objects (and the statically-linked SwiftTerm) fold into
   # whatever links it. AinkradAppKit is dynamic and NEVER embedded — resolved
