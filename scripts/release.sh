@@ -17,7 +17,7 @@ rm -rf dist && mkdir -p dist
 SHA="$(shasum -a 256 dist/terminal.bundle.zip | awk '{print $1}')"
 
 cat > dist/ainkrad-plugin.json <<JSON
-{ "id": "terminal", "name": "Terminal", "icon": "terminal", "description": "$DESC", "apiVersion": 6, "sha256": "$SHA",
+{ "id": "terminal", "name": "Terminal", "icon": "terminal", "description": "$DESC", "apiVersion": 7, "sha256": "$SHA",
   "author": "$AUTHOR", "longDescription": "$LONG_DESC", "screenshots": ["https://raw.githubusercontent.com/AhmedMElhalaby/AinkradTerminal/master/screenshots/terminal-1.png"], "links": [] }
 JSON
 
